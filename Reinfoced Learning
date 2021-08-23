@@ -1,0 +1,529 @@
+#The author of this program is Kevin Dench
+#It was wrote during June, July & August 2021
+#It was used during my Masters Thesis Project
+#Titled "REINFORCED LEARNING APPROACH TO CYBER SECURITY"
+import math
+import numpy
+import random
+import xlsxwriter
+
+file = open("C:\\Users\\kevin\\Desktop\\test2.txt", "r")
+f = file.read()
+file.close()
+arr = f.split(', ')
+numb = ['-0', '00', '01', '02', '03', '04', '05',
+        '06', '07', '08', '09', '10', '11', '12',
+        '13', '14', '15', '16', '17', '18', '19',
+        '20', '21', '22', '23', '24', '25', '26',
+        '27', '28', '29', '30', '31', '32', '33',
+        '34', '35', '36']
+count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#The file used here was created by hand from a digital roulette game,
+#the numbers were inputted as double digits with 0 becomming -0 so that
+#it wasnt mixed up with 00, each other single digit has a zero at the start
+#01, 02, 03... 09 for example.
+#The array "count" is just used to show the statistics for each number
+for i in range(0, len(arr)):
+        for j in range(0, 38):
+            if arr[i] == numb[j]:
+                count[j] += 1
+print(len(arr))
+largest = 0
+smallest = len(arr)
+for i in range(0, 38):
+    if(count[i] < smallest):
+        smallest = count[i]
+        s_locate = i
+    if(count[i] > largest):
+        largest = count[i]
+        l_locate = i
+#looks for the highest and lowest returned choice and
+#the amount of times it appears
+
+def getChoice():
+    choose = input("\nMenu\n(S)how stats\n(G)reedy\n(E)-Greedy"
+                   "\n(U)CB1\n(T)hompson Sampling\n(R)oulette Wheel"
+                   "Sampling\n(M)artingale\n(A)nalyze in excel\n(Q)uit\n")
+    choice=choose.lower()
+
+    return choice
+#simple menu system for usability
+
+def showStats():
+     print("The roulette wheel was spun " + str(len(arr)) + " times")
+     print("Number " + numb[l_locate] + " appeared the most times with "
+          + str(largest))
+     print("Number " + numb[s_locate] + " appeared the least times with "
+          + str(smallest))
+     print("The average would be " + str(len(arr)/38))
+#Returns the stats for the highest and lowest number choice as well
+#as the average
+
+def greedy():
+        g_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(0, 380):
+                for j in range(0, 38):
+                        if arr[i] == numb[j]:
+                                g_count[j] += 1
+        g_largest = 0
+        for i in range(0, 38):
+                if(g_count[i] > g_largest):
+                        g_largest = g_count[i]
+                        g_locate = i
+                        g_num = numb[g_locate]
+                        g_times = 0
+        for i in range(380, len(arr)):
+                if(arr[i]==g_num):
+                        g_times += 1
+        print("The exploration phase found that " + str(g_num)
+          + " was the most returned number after 380 spins")
+        print("Not including the exploration phase " + str(g_num)
+          + " appeared another " + str(g_times) + " times")
+#Uses the first 380 rounds for exploration to make its decision
+#it will use the highest returned number at this point as its
+#choice for the rest of the test
+    
+def e_greedy():
+        e_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        e_largest = 0
+        e_times = 0
+        e_round = 0
+        e_bets = 0
+        for i in range(0, len(arr)):
+                if(i<380):
+                        for j in range(0, 38):
+                                if arr[i] == numb[j]:
+                                        e_count[j] += 1
+                        for j in range(0, 38):
+                                if(e_count[j] > e_largest):
+                                        e_largest = e_count[j]
+                                        e_locate = j
+                                        e_num = numb[e_locate]
+                else:
+                        if(i==380):
+                                print("After exploring the first 380 spins " + str(e_num)
+                                      + " was found to be the most returned number")
+                        if((i-379)%100 == 0):
+                                e_round += 1
+                                for j in range(0, 38):
+                                        if(arr[i] == numb[j]):
+                                                e_count[j] +=1
+                                for j in range(0, 38):
+                                        if(e_count[j] > e_largest):
+                                                e_largest = e_count[j]
+                                                e_locate = j
+                                                if(e_num != numb[e_locate]):
+                                                        e_num = numb[e_locate]
+                                                        print("After " + str(e_round)
+                                                              + " iterations of exploration "
+                                                              + "every 100 spins "
+                                                              + str(e_num)
+                                                              + " became the new highest")
+                        else:
+                                e_bets += 1
+                                if(arr[i]==e_num):
+                                        e_times += 1
+        print("This methods resulted in " +str(e_times) + " total wins")
+#This method uses the first 380 rounds for its initial exploration phase
+#whatever number returned the highest a this point is used, every 100
+#spins a single round of exploration is taken and the stats for the
+#found number are changed accordingly, the numbers are checked again
+#to find if there is a new highest number, if there is then this new
+#number is used
+
+def ucb1():
+        u_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        u_picked = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ,1, 1, 1,
+                    1, 1, 1, 1, 1 ,1, 1, 1, 1 ,1, 1 ,1,]
+        u_correct = 0
+        u_bet = 0
+        u_num = 0
+        for i in range(0, len(arr)):
+                if (i < 380):
+                        for j in range(0, 38):
+                                if arr[i] == numb[j]:
+                                        u_count[j] += 1
+                else:
+                        u_highest = 0.0
+                        u_num = 0
+                        u_bet += 1
+                        for j in range(0, 38):
+                                if(u_picked[j]!= 0):
+                                        ucb = (u_count[j]/i)+ (math.sqrt((2*math.log(i-379))/u_picked[j]))
+                                else:
+                                        ucb = (u_count[j]/i)+ (math.sqrt(2*math.log(i)))
+                                if(ucb>u_highest):
+                                        u_highest = ucb
+                                        u_num = numb[j]
+                                        temp = j
+                        u_picked[temp] += 1
+                        if(arr[i]==u_num):
+                                u_correct +=1
+                                u_count[temp]+=1
+        print("This method reults in " + str(u_correct) + " succesful choices")
+#This method uses the first 380 rounds for its exploration phase, each number is
+#assigned a value on how many times it was found plus a small number
+#each time a number isnt chosen it has its assigned value increased slightly
+#until it may reach a point of being picked again, only the number with the
+#highest assigned value each time is picked
+
+def thompson():
+        alpha = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        beta = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        t_correct = 0
+        for i in range(0, len(arr)):
+                t_highest = 0
+                for j in range(0, 38):
+                        t_dist = numpy.random.beta(alpha[j],beta[j])
+                        if(t_dist > t_highest):
+                                t_highest = t_dist
+                                t_num = j
+                if(arr[i]==numb[t_num]):
+                        t_correct += 1
+                        alpha[t_num] += 1
+                else:
+                        beta[t_num] +=1
+        print("This method uses a random variable so the results will vary each time")
+        print("To gain a better result run several times and use the average")
+        print("This use of the method resulted in " + str(t_correct) + " successes")
+#This method uses no exploration rounds, it instead initialises each number to 1
+#a random beta is taken using the alpha and beta values for each number and the highest
+#will be picked, if the chosen number is a success when tested its alpha is increased
+#else its beta will.
+#Using a random element results in a different result each time it is run, for best results
+#run this method sevral times and take the average.
+
+def roulette():
+        r_prob = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        u_bound = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        l_bound = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        r_total = 0
+        r_wins = 0
+        for i in range(0, 150):
+                for j in range(0, 38):
+                        if(arr[i]==numb[j]):
+                                r_prob[j]+=1
+        for j in range(0, 38):
+                r_prob[j] = r_prob[j]/1.5
+                r_total = r_total + r_prob[j]
+        u_bound[0] = r_prob[0]
+        for j in range(1, 38):
+                u_bound[j] = r_prob[j]+u_bound[j-1]
+                l_bound[j] = u_bound[j-1]
+        for i in range(150, len(arr)):
+                r_guess = random.uniform(0,100)
+                for j in range(0, 38):
+                        if(r_guess < u_bound[j] and r_guess > l_bound[j]):
+                                r_bet = j
+                if(arr[i] == numb[r_bet]):
+                        r_wins +=1
+        print("This method uses a random variable, therefore the results will vary")
+        print("For the best results run several times and calculate the average")
+        print("This method resulted in " + str(r_wins) + " successes")
+#This method uses the first 150 rounds for exploration, using a scale of 0-100,
+#each number is assigned a unique upper and lower bound based on probability of
+#it success, once this has been completed a random number is picked between 0-100,
+#whichever numbers' upper and lower bound this random picked number falls between
+#that is the number chosen, whether this number is successful or not the upper and lower
+#bounds for each number are recalculated before another random number is picked.
+
+def martingale():
+        current = 0
+        bet = 1
+        for i in range(0, len(arr)):
+                current -= bet
+                if(arr[i] > str(18)):
+                        current += bet*2
+                        bet = 1
+                else:
+                        bet = bet*2
+        print("This method resulted in " + str(current) + " successes")
+        print("Although higher than the other methods it is based on only using "
+              + " numbers 19 through 36")
+        print("The normal probability an 18 in 38 chance, which would be " + str(18/0.38) + "%")
+        print("This method resulted in a " + str((current)/((i-1)/100)) +"%")
+#This method bets on the number 19 through 36, is the number is a success it wins 1
+#if unsuccessful the next bet would be double the previous, this means that only
+#a successful choice will increment the successes
+
+def comparisons():
+        Rounds = ['B', 'C', 'D', 'E', 'F',
+                  'G', 'H', 'I', 'J', 'K']
+        workbook = xlsxwriter.Workbook("C:\\Users\\kevin\\Desktop\\data2.xlsx")
+        worksheet1 = workbook.add_worksheet("Raw")
+        worksheet2 = workbook.add_worksheet("Thompson")
+        worksheet3 = workbook.add_worksheet("Roulette")
+        worksheet4 = workbook.add_worksheet("Martingale")
+
+        worksheet1.write('A1', 'Numbers')
+        worksheet1.write('B1', 'Greedy')
+        worksheet1.write('C1', 'E-Greedy')
+        worksheet1.write('D1', 'UCB1')
+        
+        rowIndex = 2
+        for i in range(0, len(arr)):
+                worksheet2.write('A' + str(rowIndex), arr[i]) 
+                rowIndex += 1
+        rowIndex = 2
+        for i in range(150, len(arr)):
+                worksheet3.write('A' + str(rowIndex), arr[i])
+                rowIndex +=1
+        for k in range(1, 11):
+                worksheet2.write(Rounds[k-1] + "1", 'Round ' + str(k))
+                worksheet3.write(Rounds[k-1] + "1", 'Round ' + str(k))
+                rowIndex = 2
+                alpha = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                beta = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                t_correct = 0
+                for i in range(0, len(arr)):
+                        t_highest = 0
+                        for j in range(0, 38):
+                                t_dist = numpy.random.beta(alpha[j],beta[j])
+                                if(t_dist > t_highest):
+                                        t_highest = t_dist
+                                        t_num = j
+                        if(arr[i]==numb[t_num]):
+                                t_correct += 1
+                                alpha[t_num] += 1
+                        else:
+                                beta[t_num] +=1
+                        worksheet2.write(Rounds[k-1] + str(rowIndex), numb[t_num])
+                        rowIndex +=1
+                r_prob = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                u_bound = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                l_bound = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                found = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                r_total = 0
+                r_wins = 0
+                rowIndex = 2
+                for i in range(0, 150):
+                        for j in range(0, 38):
+                                if(arr[i]==numb[j]):
+                                        found[j]+=1
+                for j in range(0, 38):
+                        r_prob[j] = found[j]/1.5
+                        r_total = r_total + r_prob[j]
+                u_bound[0] = r_prob[0]
+                for j in range(1, 38):
+                        u_bound[j] = r_prob[j]+u_bound[j-1]
+                        l_bound[j] = u_bound[j-1]
+                for i in range(150, len(arr)):
+                        r_guess = random.uniform(0,100)
+                        for j in range(0, 38):
+                                if(r_guess < u_bound[j] and r_guess > l_bound[j]):
+                                        r_bet = j
+                        found[j] += 1
+                        u_bound[0] = r_prob[0]
+                        for j in range(1, 38):
+                                u_bound[j] = r_prob[j]+u_bound[j-1]
+                                l_bound[j] = u_bound[j-1]
+                        worksheet3.write(Rounds[k-1] + str(rowIndex), numb[r_bet])
+                        rowIndex +=1
+                
+ 
+        rowIndex = 2
+        for i in range(380, len(arr)):
+                worksheet1.write('A' + str(rowIndex), arr[i])
+
+                rowIndex += 1
+                
+        g_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(0, 380):
+                for j in range(0, 38):
+                        if arr[i] == numb[j]:
+                                g_count[j] += 1
+        g_largest = 0
+        for i in range(0, 38):
+                if(g_count[i] > g_largest):
+                        g_largest = g_count[i]
+                        g_locate = i
+                        g_num = numb[g_locate]
+                        g_times = 0
+        rowIndex = 2
+        for i in range(380, len(arr)):
+                if(arr[i]==g_num):
+                        g_times += 1
+                worksheet1.write('B' + str(rowIndex), g_num)
+
+                rowIndex += 1
+
+        e_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        e_largest = 0
+        e_times = 0
+        e_round = 0
+        e_bets = 0
+
+        rowIndex = 2
+        
+        for i in range(0, len(arr)):
+                if(i<380):
+                        for j in range(0, 38):
+                                if arr[i] == numb[j]:
+                                        e_count[j] += 1
+                        for j in range(0, 38):
+                                if(e_count[j] > e_largest):
+                                        e_largest = e_count[j]
+                                        e_locate = j
+                                        e_num = numb[e_locate]
+                else:
+                        if((i-379)%100 == 0):
+                                for j in range(0, 38):
+                                        if(arr[i] == numb[j]):
+                                                e_count[j] +=1
+                                for j in range(0, 38):
+                                        if(e_count[j] > e_largest):
+                                                e_largest = e_count[j]
+                                                e_locate = j
+                                                if(e_num != numb[e_locate]):
+                                                        e_num = numb[e_locate]
+                        else:
+                                e_bets += 1
+                                if(arr[i]==e_num):
+                                        e_times += 1
+                        if((i-379)%100 !=0):
+                                worksheet1.write('C' + str(rowIndex), e_num)
+
+                        rowIndex += 1
+
+        u_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        u_picked = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,]
+        u_correct = 0
+        u_bet = 0
+
+        rowIndex = 2
+        
+        for i in range(0, len(arr)):
+                if(i<380):
+                        for j in range(0, 38):
+                                if arr[i] == numb[j]:
+                                        u_count[j] += 1
+                else:
+                        u_highest = 0.0
+                        u_num = 0
+                        u_bet += 1
+                        for j in range(0, 38):
+                                if(u_picked[j]!= 0):
+                                        ucb = (u_count[j]/i)+ (math.sqrt((2*math.log(i-379))/u_picked[j]))
+                                else:
+                                        ucb = (u_count[j]/i)+ (math.sqrt(2*math.log(i)))
+                                if(ucb>u_highest):
+                                        u_highest = ucb
+                                        u_num = numb[j]
+                                        temp = j
+                        u_picked[temp] += 1
+                        if(arr[i]==u_num):
+                                u_count[temp] +=1
+
+                        worksheet1.write('D' + str(rowIndex), u_num)
+
+                        rowIndex += 1
+
+        m_max = 0
+        m_min = 10070
+        current = 0
+        bet = 1
+        rowIndex = 2
+        for i in range(0, len(arr)):
+                current -= bet
+                if(arr[i] > str(18)):
+                        current += bet*2
+                        bet = 1
+                        worksheet4.write('A' + str(rowIndex), 1)
+                else:
+                        worksheet4.write('A' + str(rowIndex), 0)
+                        if(bet > 250):
+                                bet = 500
+                        else:
+                                bet = bet*2
+                if(current < m_min):
+                        m_min = current
+                if(current > m_max):
+                        m_max = current
+
+                rowIndex += 1
+
+        workbook.close()
+        print("created")
+#This method is a combination of all the rest, rather than printing them out
+#to screen, it creates an xls file an populates the results of the tests,
+#Thompson Sampling and Roulette wheel selection are run 10 times each so that
+#an average can be used by the user. All the results are shown without the initialisation
+#phases, Thomspon shows the entire spins as it doen not use any exploration phase.
+
+choice = getChoice()
+
+while choice!="q":
+        if choice=="s":
+                showStats()
+        elif choice=="g":
+                greedy()
+        elif choice=="e":
+                e_greedy()
+        elif choice=="u":
+                ucb1()
+        elif choice=="t":
+                thompson()
+        elif choice=="r":
+                roulette()
+        elif choice=="m":
+                martingale()
+        elif choice=="a":
+                comparisons()
+        else:
+                print("Invalid choice")
+                print("\n")
+        choice=getChoice()
+
+print("Bye Bye")
+#Choces given to the user for which method they wish to try
