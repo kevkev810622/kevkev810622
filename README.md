@@ -1,10 +1,4 @@
-- 👋 Hi, I’m @kevkev810622
-- 👀 I’m interested in cyber securtiy, networks, programming and AI
-- 🌱 I’m currently finishing my masters in Cyber Securtiy and Forensics
-- 💞️ I am using this community to post small projects I may work on from time to time for user to look at, comment on to use.
-- 📫 How to reach me _ on this platform
-
-<!---
-kevkev810622/kevkev810622 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+This program is run using python
+The file names in the program will need to be changed to your own file name, i used a standard txt file for input.
+Currently this program uses -0, 00, 01, 02..., 36 as possible choices, each number is 2 digits long and with 00 already taken -0 is used to represent 0.
+This program also uses both numpy and xlswriter which will need to be downloaded seperately from a licensed vendor to use.
